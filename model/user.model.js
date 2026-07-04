@@ -2,12 +2,18 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 const userSchema = new mongoose.Schema({
-    // name: { type: String, required: true },
+    fullName: { type: String, required: true },
     email: {
         required: true, unique: true, type: String, trim: true,
         lowercase: true,
     },
-    password: { required: true, type: String, minlength: 8, }
+    password: { required: true, type: String, minlength: 8, },
+    refreshToken: { type: String, default: null },
+    avatar: { type: String, default: "https://api.dicebear.com/10.x/adventurer-neutral/svg?seed=ddddddswwqaxzcfhb" },
+    cover: { type: String, default: null },
+    history: {
+        watched: []
+    }
 }, {
     timestamps: true
 })
