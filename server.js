@@ -13,9 +13,18 @@ app.use(express.urlencoded({
 }));
 
 
-app.get("/", () => {
+app.get("/", (req, res) => {
     res.send("server is working ...")
 })
+// Server Health endpoint 
+app.get("/api/v1/health", (req, res) => {
+    res.status(200).json({
+        status: "UP",
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV,
+    });
+});
 
 // user Routes...
 app.use("/api/v1", userRouter)
