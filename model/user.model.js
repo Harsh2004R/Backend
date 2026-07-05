@@ -21,13 +21,16 @@ const userSchema = new mongoose.Schema({
 
 // --- user password hasing --- 
 userSchema.pre("save", async function (next) {
-    if (!this.isModified("password")) return next();
+
+    if (!this.isModified("password")) {
+        return;
+    }
     this.password = await bcrypt.hash(this.password, 10);
-    next();
-})
+
+});
 
 
-userSchema.methods.isPasswordCorrect = async function () {
+userSchema.methods.isPasswordCorrect = async function (password) {
     const flag = await bcrypt.compare(password, this.password);
     return flag;
 }
@@ -37,7 +40,9 @@ userSchema.methods.getAccessToken = function () {
     return jwt.sign(
         {
             _id: this._id,
+            name: this.fullName,
             email: this.email
+
         },
         process.env.ACCESS_TOKEN_SECRET,
         {
