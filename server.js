@@ -4,6 +4,10 @@ import cors from "cors";
 import dataBaseConnection from './config/db.js';
 import userRouter from "./routes/user.routes.js";
 
+
+
+
+
 const app = express();
 app.use(express.json({ limit: "10mb" }));
 app.use(cors());
@@ -32,6 +36,10 @@ app.use("/api/v1", userRouter)
 
 
 
+
+import { errorHandler } from "./middlewares/error.middleware.js";
+// express error handler ->
+app.use(errorHandler);
 const PORT = process.env.PORT || 5001
 
 app.listen(PORT, (req, res) => {
