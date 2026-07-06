@@ -110,5 +110,16 @@ const userRegisterController = async (req, res) => {
 
 
 
-export { userVerifyController, userRegisterController }
+const userProfileController = asyncHandler(async (req, res) => {
+
+    res.status(200).json(
+        new ApiResponse(200, "user profile", res.user)
+    )
+    console.log(req.user);
+
+})
+
+
+
+export { userVerifyController, userRegisterController, userProfileController }
 
