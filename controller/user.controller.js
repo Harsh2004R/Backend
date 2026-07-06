@@ -121,5 +121,26 @@ const userProfileController = asyncHandler(async (req, res) => {
 
 
 
-export { userVerifyController, userRegisterController, userProfileController }
+const userResetPasswordController = asyncHandler(async (req, res) => {
+
+    const { oldPassword, newPassword } = req.body;
+    const user = await UserModel.findById(req.user?._id);
+
+    const isOldPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+    if (!isOldPasswordCorrect) {
+        throw new ApiError(400, "Invalid old password || user's old password is not correct");
+    }
+
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json(
+        new ApiResponse(200, "Password updated successfully", null)
+    );
+
+});
+
+
+
+export { userVerifyController, userRegisterController, userProfileController, userResetPasswordController }
 
