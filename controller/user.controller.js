@@ -1,15 +1,76 @@
 import UserModel from "../model/user.model.js"
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js"
 
 
 
 
-const userVerifyController = async (req, res) => {
 
 
-    res.status(200).json({ message: "login api working..." })
+
+
+const getTokens = async (ID) => {
+
+    const user = await UserModel.findById(ID);
+    if (!user) {
+        throw new ApiError(404, "User not found to assign token");
+    }
+
+    const accessToken = user.getAccessToken();
+    const refreshToken = user.getRefreshToken();
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+    return {
+        accessToken, refreshToken
+    }
 }
+
+
+
+const userVerifyController = asyncHandler(async (req, res) => {
+
+    const { email, password } = req.body;
+
+    if (!(email || password)) {
+        throw new ApiError(400, "Email and password are required")
+    }
+    // Find user
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+        throw new ApiError(404, `User not found with ${email}`);
+    }
+    // password verify
+    const correctPassword = user.isPasswordCorrect(password);
+    if (!correctPassword) {
+        throw new ApiError(401, "Invalid credentials");
+    }
+
+    // token assignment
+    const { accessToken, refreshToken } = await getTokens(user._id);
+
+    res.status(200).json(
+        new ApiResponse(200,
+            {
+                accessToken,
+                refreshToken
+            }
+            , "Login successful")
+    );
+
+})
+
+
+
+
+
+
+
+
+
+
 
 const userRegisterController = async (req, res) => {
 
@@ -44,6 +105,10 @@ const userRegisterController = async (req, res) => {
 
 
 }
+
+
+
+
 
 export { userVerifyController, userRegisterController }
 
