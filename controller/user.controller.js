@@ -141,6 +141,25 @@ const userResetPasswordController = asyncHandler(async (req, res) => {
 });
 
 
+const userLogoutController = asyncHandler(async (req, res) => {
 
-export { userVerifyController, userRegisterController, userProfileController, userResetPasswordController }
+    const user = await UserModel.findByIdAndUpdate
+        (
+            req.user?._id,
+            {
+                $unset: { refreshToken: 1 }
+            },
+            {
+                $new: true
+            }
+        );
+
+    res.status(200).json(
+        new ApiResponse(200, "Logout successful", null)
+    );
+
+})
+
+
+export { userVerifyController, userRegisterController, userProfileController, userResetPasswordController, userLogoutController }
 
