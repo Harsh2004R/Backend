@@ -1,9 +1,8 @@
 import UserModel from "../model/user.model.js"
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { asyncHandler } from "../utils/asyncHandler.js"
-
-
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 
 
@@ -112,13 +111,60 @@ const userRegisterController = async (req, res) => {
 
 const userProfileController = asyncHandler(async (req, res) => {
 
+
     res.status(200).json(
-        new ApiResponse(200, "user profile", res.user)
+        new ApiResponse(200, {}, "user profile here")
     )
-    console.log(req.user);
+
+
 
 })
 
+
+const userProfileUpdateController = asyncHandler(async (req, res) => {
+
+    const { fullName, email } = req.body;
+    const avatarLocalPath = req.file?.path;
+    // At least one field should be provided
+    if (!fullName && !email && !avatarLocalPath) {
+        throw new ApiError(400, "Please provide at least one field to update.");
+    }
+    if (!avatarLocalPath) {
+        throw new ApiError(400, "Avatar image is required")
+    }
+
+    const updatedFields = {};
+    if (fullName?.trim()) {
+        updatedFields.fullName = fullName.trim();
+    }
+
+    if (email?.trim()) {
+        updatedFields.email = email.trim();
+    }
+
+
+    // Upload to Cloudinary
+    if (avatarLocalPath) {
+        console.time("cloudinary upload")
+        const avatar = await uploadOnCloudinary(avatarLocalPath);
+        console.timeEnd("cloudinary upload")
+        if (!avatar) {
+            throw new ApiError(400, "Avatar failed to upload");
+        }
+        updatedFields.avatar = avatar.secure_url;
+    }
+
+    console.time("Mongo Update");
+    const user = await UserModel.findByIdAndUpdate(req.user?._id, {
+        $set: updatedFields
+    }, { returnNewDocument: true }).select("-password -refreshToken");
+    console.timeEnd("Mongo Update");
+
+
+    res.status(200).json(
+        new ApiResponse(200, "User Profile Updated Successfully", user)
+    )
+})
 
 
 const userResetPasswordController = asyncHandler(async (req, res) => {
@@ -161,5 +207,5 @@ const userLogoutController = asyncHandler(async (req, res) => {
 })
 
 
-export { userVerifyController, userRegisterController, userProfileController, userResetPasswordController, userLogoutController }
+export { userVerifyController, userRegisterController, userProfileController, userResetPasswordController, userLogoutController, userProfileUpdateController }
 
